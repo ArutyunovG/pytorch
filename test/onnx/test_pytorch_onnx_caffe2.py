@@ -1769,6 +1769,7 @@ class TestCaffe2Backend_opset9(unittest.TestCase):
                 a, b = torch.ops._caffe2.GenerateProposals(
                     feature, bbox_deltas, im_info, anchors,
                     2.0, 6000, 300, 0.7, 16, True, -90, 90, 1.0, True,
+                    False, False,
                 )
                 output = torch.ops._caffe2.RoIAlign(
                     feature, a,
@@ -1826,6 +1827,7 @@ class TestCaffe2Backend_opset9(unittest.TestCase):
                 a, b = torch.ops._caffe2.GenerateProposals(
                     scores, bbox_deltas, im_info, anchors,
                     2.0, 6000, 300, 0.7, 16, True, -90, 90, 1.0, True,
+                    False, False,
                 )
                 return a, b
 
@@ -1860,6 +1862,9 @@ class TestCaffe2Backend_opset9(unittest.TestCase):
                     angle_bound_hi=90,
                     clip_angle_thresh=0.5,
                     legacy_plus_one=True,
+                    clip_boxes=True,
+                    share_location=False,
+                    normalized=False,
                 )
                 return a, b
 
@@ -1905,6 +1910,9 @@ class TestCaffe2Backend_opset9(unittest.TestCase):
                 90,
                 clip_angle_thresh,
                 legacy_plus_one=True,
+                clip_boxes=True,
+                share_location=False,
+                normalized=False,
             )
         ]
         class_prob = np.random.randn(sum(roi_counts), num_classes).astype(np.float32)
