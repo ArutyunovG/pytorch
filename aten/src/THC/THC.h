@@ -1,6 +1,8 @@
 #ifndef THC_INC
 #define THC_INC
 
+#pragma warning(disable : 4700)
+
 #include <THC/THCGeneral.h>
 #include <THC/THCAllocator.h>
 #include <THC/THCBlas.h>

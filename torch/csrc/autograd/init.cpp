@@ -1,3 +1,4 @@
+#include <cmath>
 #include <torch/csrc/python_headers.h>
 
 #include <torch/csrc/Exceptions.h>

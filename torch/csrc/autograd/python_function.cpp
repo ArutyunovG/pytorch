@@ -1,3 +1,4 @@
+#include <cmath>
 #include <torch/csrc/autograd/python_function.h>
 
 #include <torch/csrc/python_headers.h>

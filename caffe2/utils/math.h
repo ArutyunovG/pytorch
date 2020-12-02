@@ -1,5 +1,8 @@
 #ifndef CAFFE2_UTILS_MATH_H_
 #define CAFFE2_UTILS_MATH_H_
+
+#pragma warning (disable: 4700)
+
 // This is a simple translation from the old Caffe math interfaces. We aim to
 // still keep it simple, so all platforms would be able to support it fairly
 // easily.

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <torch/csrc/Device.h>
 
 #include <torch/csrc/Exceptions.h>

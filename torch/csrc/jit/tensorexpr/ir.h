@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma warning(disable : 4805)
+
 #include <string>
 #include <vector>
 
