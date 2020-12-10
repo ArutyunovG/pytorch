@@ -271,18 +271,13 @@ class Depthwise3x3ConvOp final : public ConvPoolOpBase<CUDAContext> {
  public:
   USE_CONV_POOL_BASE_FUNCTIONS(CUDAContext);
   Depthwise3x3ConvOp(const OperatorDef& operator_def, Workspace* ws)
-      : ConvPoolOpBase<CUDAContext>(operator_def, ws),
-        cudnn_wrapper_(&context_) {
+      : ConvPoolOpBase<CUDAContext>(operator_def, ws) {
     OPERATOR_NEEDS_FEATURE(
         this->order_ == StorageOrder::NCHW,
         "Depthwise3x3ConvOp only supports NCHW order");
-    CUDNN_ENFORCE(cudnnCreateTensorDescriptor(&bias_desc_));
-    CUDNN_ENFORCE(cudnnCreateTensorDescriptor(&top_desc_for_bias_));
   }
 
   ~Depthwise3x3ConvOp() {
-    CUDNN_ENFORCE(cudnnDestroyTensorDescriptor(bias_desc_));
-    CUDNN_ENFORCE(cudnnDestroyTensorDescriptor(top_desc_for_bias_));
   }
 
   bool RunOnDeviceWithOrderNCHW() override {
@@ -325,42 +320,30 @@ class Depthwise3x3ConvOp final : public ConvPoolOpBase<CUDAContext> {
             Y->mutable_data<float>(),
             Y->size());
     if (InputSize() == 3) {
-      CUDNN_ENFORCE(cudnnSetTensor4dDescriptor(
-          bias_desc_,
-          GetCudnnTensorFormat(order_),
-          cudnnTypeWrapper<float>::type,
-          1,
-          M,
-          1,
-          1));
-      CUDNN_ENFORCE(cudnnSetTensor4dDescriptor(
-          top_desc_for_bias_,
-          GetCudnnTensorFormat(order_),
-          cudnnTypeWrapper<float>::type,
-          Y->dim32(0),
-          M,
-          Y->dim32(2),
-          Y->dim32(3)));
       auto& bias = Input(2);
       CAFFE_ENFORCE_EQ(bias.dim(), 1);
       CAFFE_ENFORCE_EQ(bias.dim32(0), M);
-      CUDNN_ENFORCE(cudnnAddTensor(
-          cudnn_wrapper_.inline_cudnn_handle(),
-          cudnnTypeWrapper<float>::kOne(),
-          bias_desc_,
+      ConvPoolOpBase<CUDAContext>::template SetBiasMultiplier<float>(
+          Y->dim32(2) * Y->dim32(3), &bias_multiplier_);
+      math::Gemm<float, CUDAContext>(
+          CblasNoTrans,
+          CblasNoTrans,
+          M,
+          Y->dim32(2) * Y->dim32(3),
+          1,
+          1.0f,
           bias.data<float>(),
-          cudnnTypeWrapper<float>::kOne(),
-          top_desc_for_bias_,
-          Y->mutable_data<float>()));
+          bias_multiplier_.data<float>(),
+          1.0f,
+          Y->mutable_data<float>(),
+          &context_);
     }
 
     return true;
   }
 
  private:
-  CuDNNWrapper cudnn_wrapper_;
-  cudnnTensorDescriptor_t bias_desc_;
-  cudnnTensorDescriptor_t top_desc_for_bias_;
+  Tensor bias_multiplier_{CUDAContext::GetDeviceType()};
 };
 
 class Depthwise3x3ConvGradientOp final : public ConvPoolOpBase<CUDAContext> {
